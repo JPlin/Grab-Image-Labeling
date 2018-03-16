@@ -109,7 +109,8 @@ private:
     vector<Point> fgdPxls,bgdPxls,prFgdPxls,prBgdPxls;
     bool isInitialized;
     bool isf;
-
+    int iterCount; // grab cut 的迭代次数
+    int paint_width ; // 画刷的宽度
 
     //不同的层有不同的MAt
     Mat img_lbrow;
@@ -140,6 +141,9 @@ private:
     QString real_prefix; // 真正的文件前缀
     int hair_thresh;
     int face_thresh;
+
+    int WIDTH;
+    int HEIGHT;
 
 private:
     void displayMat(Mat mat);

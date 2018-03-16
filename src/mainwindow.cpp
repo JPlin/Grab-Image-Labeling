@@ -7,6 +7,7 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
+    /*
     img_rbrow(480,640,CV_8UC3,Scalar(0,0,0)),
     img_lbrow(480,640,CV_8UC3,Scalar(0,0,0)),
     img_leye(480,640,CV_8UC3,Scalar(0,0,0)),
@@ -17,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent) :
     img_rear(480,640,CV_8UC3,Scalar(0,0,0)),
     mix(480,640,CV_8UC3,Scalar(0,0,0)),
     alpha_channel(480,640,CV_8UC1,Scalar(255)),
+    */
     LEYE_COLOR(255,144,30),
     REYE_COLOR(225,105,65),
     LBROW_COLOR(30,144,255),
@@ -29,7 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->setupUi(this);
 
-    ui->label->setScaledContents(true);
+    //ui->label->setScaledContents(true);
 
     ui->openPushButton->setEnabled(false);
     ui->autoPushButton->setEnabled(false);
@@ -42,6 +44,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->savePushButton->setShortcut(tr("ctrl+s"));
     ui->redoPushButton->setShortcut(tr("ctrl+r"));
     ui->undoPushButton->setShortcut(tr("ctrl+u"));
+
+    ui->pushMixButton->setShortcut(tr("space"));
 
     ui->pushLBrowButton->setEnabled(false);
 
@@ -110,7 +114,8 @@ MainWindow::MainWindow(QWidget *parent) :
     prLblsState=NOT_SET;
     isInitialized=false;
     isf=true;
-
+    iterCount = 3;
+    paint_width = 2;
 
 
     STEP = LBROW;
@@ -195,23 +200,29 @@ void MainWindow::on_setPushButton_clicked()
        {
            if(seqPath.endsWith("\\"))
            {
-               inputPath=seqPath+fileFormat + "\\" + "%d";
+
+               // [old_v] inputPath=seqPath+fileFormat + "\\" + "%d";
+                inputPath = seqPath + fileFormat;
            }
            else
            {
-               inputPath=seqPath+"\\"+fileFormat + "\\" + "%d";
+               // [old_v] inputPath=seqPath+"\\"+fileFormat + "\\" + "%d";
+                inputPath = seqPath + "\\" + fileFormat;
            }
 
            if(outputPath.endsWith("\\"))
            {
                outputPath= "\\%s.png";
-               imgOutputDir = inputPath + "\\parsing";
+               // [old_v] imgOutputDir = inputPath + "\\parsing";
+               imgOutputDir = inputPath;
            }
            else
            {
                //outputPath=oPath+"\\"+fileFormat;
                outputPath="\\%s.png";
-                imgOutputDir = inputPath + "\\parsing";
+               // [old_v] imgOutputDir = inputPath + "\\parsing";
+               imgOutputDir = inputPath;
+
            }
 
            frameIdx=startFrame.toInt();
@@ -311,20 +322,9 @@ void MainWindow::on_savePushButton_clicked()
         flag = true;
     }
 
-    /*
-    cv::resize(img_cur_copy,img_cur_copy,Size(640,480));
-    cv::resize(img_lbrow,img_lbrow,Size(640,480));
-    cv::resize(img_rbrow,img_rbrow,Size(640,480));
-    cv::resize(img_leye,img_leye,Size(640,480));
-    cv::resize(img_reye,img_reye,Size(640,480));
-    cv::resize(img_nose,img_nose,Size(640,480));
-    cv::resize(img_mouth,img_mouth,Size(640,480));
-    cv::resize(img_lear,img_lear,Size(640,480));
-    cv::resize(img_rear,img_rear,Size(640,480));
-    cv::resize(mix,mix,Size(640,480));
-    */
     QString path;
-    path.sprintf(imgOutputDir.toStdString().c_str(),frameIdx,no_index);
+    // [old_v] path.sprintf(imgOutputDir.toStdString().c_str(),frameIdx,no_index);
+    path.sprintf(imgOutputDir.toStdString().c_str(),frameIdx);
     QDir dir(path);
     if(!dir.exists())
         dir.mkdir(path);
@@ -335,11 +335,12 @@ void MainWindow::on_savePushButton_clicked()
     compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION); //PNG格式图片的压缩级别
     compression_params.push_back(9);  //这里设置保存的图像质量级别
 
-
+    Mat resizemat;
     imgOutputPath.sprintf((path+outputPath).toStdString().c_str(),"lbrow");
     fi.setFileName(imgOutputPath);
     if(fi.exists())
         fi.remove();
+    //cv::resize(img_lbrow , resizemat , Size(WIDTH , HEIGHT) ,  (0, 0), (0, 0), cv::INTER_NEAREST);
     if(!imwrite(imgOutputPath.toStdString(),img_lbrow,compression_params))
         flag = true;
 
@@ -347,6 +348,7 @@ void MainWindow::on_savePushButton_clicked()
     fi.setFileName(imgOutputPath);
     if(fi.exists())
         fi.remove();
+
     if(!imwrite(imgOutputPath.toStdString(),img_rbrow,compression_params))
         flag = true;
 
@@ -354,6 +356,7 @@ void MainWindow::on_savePushButton_clicked()
     fi.setFileName(imgOutputPath);
     if(fi.exists())
         fi.remove();
+
     if(!imwrite(imgOutputPath.toStdString(),img_leye,compression_params))
         flag = true;
 
@@ -361,6 +364,7 @@ void MainWindow::on_savePushButton_clicked()
     fi.setFileName(imgOutputPath);
     if(fi.exists())
         fi.remove();
+
     if(!imwrite(imgOutputPath.toStdString(),img_reye,compression_params))
         flag = true;
 
@@ -368,6 +372,7 @@ void MainWindow::on_savePushButton_clicked()
     fi.setFileName(imgOutputPath);
     if(fi.exists())
         fi.remove();
+
     if(!imwrite(imgOutputPath.toStdString(),img_nose,compression_params))
         flag = true;
 
@@ -375,6 +380,7 @@ void MainWindow::on_savePushButton_clicked()
     fi.setFileName(imgOutputPath);
     if(fi.exists())
         fi.remove();
+
     if(!imwrite(imgOutputPath.toStdString(),img_mouth,compression_params))
         flag = true;
 
@@ -382,6 +388,7 @@ void MainWindow::on_savePushButton_clicked()
     fi.setFileName(imgOutputPath);
     if(fi.exists())
         fi.remove();
+
     if(!imwrite(imgOutputPath.toStdString(),img_lear,compression_params))
         flag = true;
 
@@ -389,6 +396,7 @@ void MainWindow::on_savePushButton_clicked()
     fi.setFileName(imgOutputPath);
     if(fi.exists())
         fi.remove();
+
     if(!imwrite(imgOutputPath.toStdString(),img_rear,compression_params))
         flag = true;
 
@@ -397,6 +405,7 @@ void MainWindow::on_savePushButton_clicked()
     fi.setFileName(imgOutputPath);
     if(fi.exists())
         fi.remove();
+
     if(!imwrite(imgOutputPath.toStdString(),mix,compression_params))
         QMessageBox::information(NULL,"Save Error","something wrong in saving mix image!",QMessageBox::Ok);
 
@@ -408,8 +417,9 @@ void MainWindow::on_savePushButton_clicked()
     vector<Mat> channels;
     split(mix,channels);
     channels.push_back(alpha_channel);
-    Mat alpha_channels(480,640,CV_8UC4,Scalar(0,0,0,0));
+    Mat alpha_channels(HEIGHT,WIDTH,CV_8UC4,Scalar(0,0,0,0));
     merge(channels,alpha_channels);
+
     if(!imwrite(imgOutputPath.toStdString(),alpha_channels,compression_params))
         QMessageBox::information(NULL,"Save Error","something wrong in saving mix image!",QMessageBox::Ok);
 
@@ -419,6 +429,8 @@ void MainWindow::on_savePushButton_clicked()
     }
 
     //进行下一张图片的读取
+
+    /* [old_v]
     if(no_index ==  1)
         no_index = 2;
     else
@@ -426,6 +438,9 @@ void MainWindow::on_savePushButton_clicked()
         no_index = 1;
         frameIdx++;
     }
+    */
+    frameIdx ++;
+
     readImage();
 
     /*
@@ -558,13 +573,13 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
                {
                     img_cur.copyTo(img_cur_copy);
                     if (isInitialized)
-                        grabCut(img_cur_copy, mask, rect, bgdModel, fgdModel, 5);
+                        grabCut(img_cur_copy, mask, rect, bgdModel, fgdModel , iterCount);
                     else
                     {
                         if (lblsState == SET || prLblsState == SET)
-                            grabCut(img_cur_copy, mask, rect, bgdModel, fgdModel, 5, GC_INIT_WITH_MASK);
+                            grabCut(img_cur_copy, mask, rect, bgdModel, fgdModel, iterCount , GC_INIT_WITH_MASK);
                         else
-                            grabCut(img_cur_copy, mask, rect, bgdModel, fgdModel, 5, GC_INIT_WITH_RECT);
+                            grabCut(img_cur_copy, mask, rect, bgdModel, fgdModel, iterCount , GC_INIT_WITH_RECT);
 
                         isInitialized = true;
                     }
@@ -701,28 +716,28 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
             if(lblsState==IN_PROCESS&&isf)
             {
                 for(it=fgdPxls.begin();it!=fgdPxls.end();++it)
-                    circle(mask,*it,1,GC_FGD,-1);
+                    circle(mask,*it,paint_width,GC_FGD,-1);
                 lblsState=SET;
             }
 
             if(lblsState==IN_PROCESS&&!isf)
             {
                 for(it=bgdPxls.begin();it!=bgdPxls.end();++it)
-                    circle(mask,*it,1,GC_BGD,-1);
+                    circle(mask,*it,paint_width,GC_BGD,-1);
                 lblsState=SET;
             }
 
             if(prLblsState==IN_PROCESS&&isf)
             {
                 for(it=prFgdPxls.begin();it!=prFgdPxls.end();++it)
-                    circle(mask,*it,1,GC_PR_FGD,-1);
+                    circle(mask,*it,paint_width,GC_PR_FGD,-1);
                 prLblsState=SET;
             }
 
             if(prLblsState==IN_PROCESS&&!isf)
             {
                 for(it=prBgdPxls.begin();it!=prBgdPxls.end();++it)
-                    circle(mask,*it,1,GC_PR_BGD,-1);
+                    circle(mask,*it,paint_width,GC_PR_BGD,-1);
                 prLblsState=SET;
             }
 
@@ -756,7 +771,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
             {
 
                 fgdPxls.push_back(pointTmp);
-                circle(img_cur_copy,pointTmp,1,Scalar(0,0,255),-1);
+                circle(img_cur_copy,pointTmp,paint_width,Scalar(0,0,255),-1);
 
                 Mat temp_show;
                 addWeighted(img_cur,0.5,img_cur_copy,0.5,0,temp_show);
@@ -767,7 +782,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
             if(lblsState==IN_PROCESS&&!isf)
             {
                 bgdPxls.push_back(pointTmp);
-                circle(img_cur_copy,pointTmp,1,Scalar(255,0,0),-1);
+                circle(img_cur_copy,pointTmp,paint_width,Scalar(255,0,0),-1);
 
                 Mat temp_show;
                 addWeighted(img_cur,0.5,img_cur_copy,0.5,0,temp_show);
@@ -778,7 +793,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
             if(prLblsState==IN_PROCESS&&isf)
             {
                 prFgdPxls.push_back(pointTmp);
-                circle(img_cur_copy,pointTmp,1,Scalar(230,130,255),-1);
+                circle(img_cur_copy,pointTmp,paint_width,Scalar(230,130,255),-1);
 
                 Mat temp_show;
                 addWeighted(img_cur,0.5,img_cur_copy,0.5,0,temp_show);
@@ -789,7 +804,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
             if(prLblsState==IN_PROCESS&&!isf)
             {
                 prBgdPxls.push_back(pointTmp);
-                circle(img_cur_copy,pointTmp,1,Scalar(255,255,160),-1);
+                circle(img_cur_copy,pointTmp,paint_width,Scalar(255,255,160),-1);
 
                 Mat temp_show;
                 addWeighted(img_cur,0.5,img_cur_copy,0.5,0,temp_show);
@@ -809,6 +824,8 @@ bool MainWindow::readImage()
 {
 
     contour.clear();
+
+    /* [old_v]
     imgInputPath.sprintf(inputPath.toStdString().c_str(),frameIdx,no_index);
     QDir *tempory_dir = new QDir(imgInputPath);
     QStringList filter;
@@ -816,16 +833,44 @@ bool MainWindow::readImage()
     tempory_dir->setNameFilters(filter);
     QList<QFileInfo> *fileinfo = new QList<QFileInfo>(tempory_dir->entryInfoList(filter));
     prefix = fileinfo->at(0).absoluteFilePath();
-    this->setWindowTitle(prefix);
+
 
     //get the real prefix,why real?dont ask me
     string filename = fileinfo->at(0).baseName().toStdString();
     size_t start =0,index =filename.find_first_of("M*",0);
     if(start!=index)
         real_prefix = QString::fromStdString(filename.substr(start,index-start));
+    */
 
+
+    prefix = imgInputPath.sprintf(inputPath.toStdString().c_str(),frameIdx).append(".jpg");
     //read  the origin image
-    img_cur=imread(prefix.toStdString());
+    this->setWindowTitle(prefix);
+    img_cur = imread(prefix.toStdString());
+    WIDTH = img_cur.cols;
+    HEIGHT = img_cur.rows;
+
+    ui->label->setFixedHeight(HEIGHT);
+    ui->label->setFixedWidth(WIDTH);
+    img_cur.copyTo(img_rbrow);
+    img_cur.copyTo(img_lbrow);
+    img_cur.copyTo(img_reye);
+    img_cur.copyTo(img_leye);
+    img_cur.copyTo(img_nose);
+    img_cur.copyTo(img_mouth);
+    img_cur.copyTo(img_lear);
+    img_cur.copyTo(img_rear);
+    img_cur.copyTo(mix);
+    img_cur.copyTo(alpha_channel);
+    img_lbrow.setTo(0);
+    img_leye.setTo(0);
+    img_reye.setTo(0);
+    img_nose.setTo(0);
+    img_mouth.setTo(0);
+    img_lear.setTo(0);
+    img_rear.setTo(0);
+    mix.setTo(0);
+    alpha_channel.setTo(0);
 
     if(!img_cur.empty())
     {
@@ -839,7 +884,10 @@ bool MainWindow::readImage()
 
         //read relative part of face
         QString path;
-        path.sprintf(imgOutputDir.toStdString().c_str(),frameIdx,no_index);
+
+        // [old_v] path.sprintf(imgOutputDir.toStdString().c_str(),frameIdx,no_index);
+        path.sprintf(imgOutputDir.toStdString().c_str(),frameIdx);
+
         QDir dir(path);
         if(!dir.exists())
             dir.mkdir(path);
@@ -850,6 +898,7 @@ bool MainWindow::readImage()
         fi.setFileName(imgOutputPath);
         if(fi.exists())
             img_lbrow = imread(imgOutputPath.toStdString());
+
         else
             img_lbrow.setTo(0);
 
@@ -858,6 +907,7 @@ bool MainWindow::readImage()
         fi.setFileName(imgOutputPath);
         if(fi.exists())
             img_rbrow = imread(imgOutputPath.toStdString());
+
         else
             img_rbrow.setTo(0);
 
@@ -865,6 +915,7 @@ bool MainWindow::readImage()
         fi.setFileName(imgOutputPath);
         if(fi.exists())
             img_leye = imread(imgOutputPath.toStdString());
+
         else
             img_leye.setTo(0);
 
@@ -872,6 +923,7 @@ bool MainWindow::readImage()
         fi.setFileName(imgOutputPath);
         if(fi.exists())
             img_reye = imread(imgOutputPath.toStdString());
+
         else
             img_reye.setTo(0);
 
@@ -879,6 +931,7 @@ bool MainWindow::readImage()
         fi.setFileName(imgOutputPath);
         if(fi.exists())
             img_nose = imread(imgOutputPath.toStdString());
+
         else
             img_nose.setTo(0);
 
@@ -886,6 +939,7 @@ bool MainWindow::readImage()
         fi.setFileName(imgOutputPath);
         if(fi.exists())
             img_mouth = imread(imgOutputPath.toStdString());
+
         else
             img_mouth.setTo(0);
 
@@ -893,6 +947,7 @@ bool MainWindow::readImage()
         fi.setFileName(imgOutputPath);
         if(fi.exists())
             img_lear = imread(imgOutputPath.toStdString());
+
         else
             img_lear.setTo(0);
 
@@ -900,6 +955,7 @@ bool MainWindow::readImage()
         fi.setFileName(imgOutputPath);
         if(fi.exists())
             img_rear = imread(imgOutputPath.toStdString());
+
         else
             img_rear.setTo(0);
         return true;
@@ -1311,26 +1367,39 @@ void MainWindow::on_pushMixButton_clicked()
     //12 different part
     //#1 background #2 up_body #3 face #4 hair #5 left brow # 6 right brow
     //#7 left eye #8 right eye #9 nose #10 mouth #11 left ear #12 right ear
-    Mat temp_mask(480,640,CV_8UC1,Scalar(0,0,0)); //used as mask
+    Mat temp_mask(HEIGHT,WIDTH,CV_8UC1,Scalar(0,0,0)); //used as mask
 
     vector<Mat> channels;
 
     mix.setTo(0);
 
-    Mat FG(480,640,CV_8UC3,Scalar(0,0,0));
-    Mat Face(480,640,CV_8UC3,Scalar(0,0,0));
-    Mat Hair(480,640,CV_8UC3,Scalar(0,0,0));
+    Mat FG(HEIGHT,WIDTH,CV_8UC3,Scalar(0,0,0));
+    Mat Face(HEIGHT,WIDTH,CV_8UC3,Scalar(0,0,0));
+    Mat Hair(HEIGHT,WIDTH,CV_8UC3,Scalar(0,0,0));
+
+    /* [old_v]
     imgInputPath.sprintf(inputPath.toStdString().c_str(),frameIdx,no_index);
     Face = imread(imgInputPath.append("//").append(real_prefix).append("Face.jpg").toStdString().c_str());
     imgInputPath.sprintf(inputPath.toStdString().c_str(),frameIdx,no_index);
     FG = imread(imgInputPath.append("//").append(real_prefix).append("FG.jpg").toStdString().c_str());
     imgInputPath.sprintf(inputPath.toStdString().c_str(),frameIdx,no_index);
     Hair = imread(imgInputPath.append("//").append(real_prefix).append("Hair.jpg").toStdString().c_str());
+    */
+
+    imgInputPath.sprintf(inputPath.toStdString().c_str(),frameIdx);
+    Face = imread(imgInputPath.append("_Face.jpg").toStdString().c_str());
+    imgInputPath.sprintf(inputPath.toStdString().c_str(),frameIdx);
+    FG = imread(imgInputPath.append("_FG.jpg").toStdString().c_str());
+    imgInputPath.sprintf(inputPath.toStdString().c_str(),frameIdx);
+    Hair = imread(imgInputPath.append("_Hair.jpg").toStdString().c_str());
+
+
+
 
     //read three other part of the image,deprecated after one day
-    Mat face(480,640,CV_8UC3,Scalar(0,0,0));
-    Mat hair(480,640,CV_8UC3,Scalar(0,0,0));
-    Mat body(480,640,CV_8UC3,Scalar(0,0,0));
+    Mat face(HEIGHT,WIDTH,CV_8UC3,Scalar(0,0,0));
+    Mat hair(HEIGHT,WIDTH,CV_8UC3,Scalar(0,0,0));
+    Mat body(HEIGHT,WIDTH,CV_8UC3,Scalar(0,0,0));
 
     split(Face,channels);
     channels.at(0).setTo(0);
@@ -1344,6 +1413,7 @@ void MainWindow::on_pushMixButton_clicked()
     cv::threshold(channels.at(0),channels.at(0),200,255,CV_THRESH_BINARY);
     merge(channels,FG);
 
+    //QMessageBox::information(NULL,"Save Error",QString::fromStdString(std::to_string(Face.cols).append(std::to_string(Face.rows))),QMessageBox::Ok);
     //#1&2 add the body and the face
     turn_to_mask(Face,temp_mask,0);
     Face.copyTo(FG,temp_mask);
@@ -1360,6 +1430,8 @@ void MainWindow::on_pushMixButton_clicked()
     turn_to_mask(img_rbrow,temp_mask,0);
     cut_pure_color(RBROW_COLOR ,face,temp_mask);
     face.copyTo(mix,temp_mask);
+    //cv::namedWindow("d");
+    //cv::imshow("d", img_leye);
 
     //#5 add the leye
     cut_the_glass(Face,img_leye);   // cut the glass out
@@ -1456,35 +1528,25 @@ void MainWindow::on_pushMixButton_clicked()
     //turn_to_mask(mix , temp_mask,0);
     //face.setTo(0);
     //hair.copyTo(face,temp_mask);
-
-    /*--------------------------this is commented in second method----------------------------*/
-    //cv::threshold(face,temp_temp_mask,50,50,CV_THRESH_TOZERO);
-
-    // body.setTo(0);
-    //hair.copyTo(body,temp_mask^1);
-    //hair = face + body;
-
-    //turn_to_mask(face,temp_mask);
-    //turn_to_mask(hair,temp_mask,0);
 }
 
 //select the mask depend on the threadhold
 void MainWindow::turn_to_mask(const Mat &com,Mat &to,double x=0)
 {
-    Mat temp(480,640,CV_8UC1,Scalar(0,0,0));
+    Mat temp(HEIGHT,WIDTH,CV_8UC1,Scalar(0,0,0));
     cvtColor(com,temp,CV_BGR2GRAY);
     cv::threshold(temp,to,x,1,CV_THRESH_BINARY);
 }
 void MainWindow::cut_pure_color(Scalar rgb,Mat & src,Mat & mask)
 {
     src.setTo(0);
-    Mat pure(480,640,CV_8UC3,rgb);
+    Mat pure(HEIGHT,WIDTH,CV_8UC3,rgb);
     pure.copyTo(src,mask);
 }
 void MainWindow::cut_the_glass(const Mat &Face,Mat &src)
 {
-    Mat temp_mask(480,640,CV_8UC1,Scalar(0,0,0));
-    Mat temp(480,640,CV_8UC3,Scalar(0,0,0));
+    Mat temp_mask(HEIGHT,WIDTH,CV_8UC1,Scalar(0,0,0));
+    Mat temp(HEIGHT,WIDTH,CV_8UC3,Scalar(0,0,0));
     turn_to_mask(Face,temp_mask,0);
     src.copyTo(temp);
     src.setTo(0);
